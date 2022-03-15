@@ -4,7 +4,6 @@ import os
 import logging
 import tg_token
 
-# Logging is cool!
 logger = logging.getLogger()
 if logger.handlers:
     for handler in logger.handlers:
@@ -23,24 +22,26 @@ ERROR_RESPONSE = {
 
 
 def configure_telegram():
-    if not TELEGRAM_TOKEN:
+    if not tg_token.TELEGRAM_TOKEN:
         logger.error('The TELEGRAM_TOKEN must be set')
         raise NotImplementedError
 
-    return telegram.Bot(TELEGRAM_TOKEN)
+    return telegram.Bot(tg_token.TELEGRAM_TOKEN)
 
 
 def webhook(event, context):
     bot = configure_telegram()
     logger.info('Event: {}'.format(event))
 
-    if event.get('requestContext').get('http').get('method') == 'POST' and event.get('body'): 
+    if event.get('body'): 
         logger.info('Message received')
         update = telegram.Update.de_json(json.loads(event.get('body')), bot)
         chat_id = update.message.chat.id
         text = update.message.text
         
-        if text == '/start':
+        if not text:
+            text = 'Empty text'
+        elif text == '/start':
             text = 'Hello, human! I am an echo bot!'
 
         bot.sendMessage(chat_id=chat_id, text=text)
